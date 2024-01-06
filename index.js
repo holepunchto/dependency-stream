@@ -4,7 +4,7 @@ const b4a = require('b4a')
 const { Readable } = require('streamx')
 
 module.exports = class DependencyStream extends Readable {
-  constructor (drive, { entrypoint = '.', preload = true, source = false, strict = false, builtins = [] } = {}) {
+  constructor (drive, { entrypoint = '.', preload = true, source = false, strict = false, builtins = [], runtimes = [], conditions = runtimes } = {}) {
     super({ highWaterMark: 64 * 1024, byteLength: objectByteLength })
 
     this.drive = drive
@@ -13,6 +13,7 @@ module.exports = class DependencyStream extends Readable {
     this.source = source
     this.modules = new Map()
     this.strict = strict
+    this.conditions = conditions
     this.builtins = Array.isArray(builtins) ? new Set(builtins) : builtins
 
     this._pending = new Map()
@@ -22,7 +23,7 @@ module.exports = class DependencyStream extends Readable {
   async _open (cb) {
     try {
       await parse.init()
-      const key = await resolve(this.drive, this.entrypoint)
+      const key = await resolve(this.drive, this.entrypoint, { basedir: '/', conditions: this.conditions })
       this._stack.push(key)
     } catch (err) {
       return cb(err)
@@ -87,7 +88,7 @@ module.exports = class DependencyStream extends Readable {
       const res = result.resolutions[i]
       if (res.input === null) continue
 
-      all.push(resolve(this.drive, res.input, { basedir }))
+      all.push(resolve(this.drive, res.input, { basedir, conditions: this.conditions }))
     }
 
     const outputs = await Promise.allSettled(all)
