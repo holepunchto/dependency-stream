@@ -175,7 +175,7 @@ module.exports = class DependencyStream extends Readable {
       const p = await this._resolvePackage(key)
       if (p) {
         result.resolutions.push({
-          isImport: false,
+          isImport: deps.type === 'module',
           position: null,
           input: 'bare:package',
           output: p.key
