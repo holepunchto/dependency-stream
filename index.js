@@ -14,6 +14,8 @@ module.exports = class DependencyStream extends Readable {
     builtins = [],
     runtimes = ['bare', 'node'],
     extensions = ['.js', '.cjs', '.json', '.mjs'],
+    host = sniffHost(),
+    portable = false,
     conditions = runtimes
   } = {}) {
     super({ highWaterMark: 64 * 1024, byteLength: objectByteLength })
@@ -27,6 +29,8 @@ module.exports = class DependencyStream extends Readable {
     this.builtins = Array.isArray(builtins) ? new Set(builtins) : builtins
     this.packages = packages
     this.extensions = extensions
+    this.host = host
+    this.portable = portable
 
     this._importConditions = ['module', 'import', ...conditions]
     this._requireConditions = ['require', ...conditions]
@@ -77,6 +81,30 @@ module.exports = class DependencyStream extends Readable {
     }
 
     return null
+  }
+
+  async _resolvePrebuild (key) {
+    const pkg = await this._readPackageCached(key + '/package.json')
+    if (!pkg) throw new Error('Addon requires a package.json')
+
+    const name = pkg.name.replace(/@/g, '+')
+    const tries = [
+      key + '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.bare',
+      key + '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.node',
+      key + '/prebuilds/' + this.host + '/' + name + '.bare',
+      key + '/prebuilds/' + this.host + '/' + name + '.node',
+      '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.bare',
+      '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.node',
+      '/prebuilds/' + this.host + '/' + name + '.bare',
+      '/prebuilds/' + this.host + '/' + name + '.node'
+    ]
+
+    for (const key of tries) {
+      const e = await this.drive.entry(key)
+      if (e) return this.portable ? key.replace('/prebuilds/' + this.host + '/', '/prebuilds/{host}/') : key
+    }
+
+    throw new Error('Addon not found')
   }
 
   async _resolveModule (id, basedir, isImport) {
@@ -141,7 +169,8 @@ module.exports = class DependencyStream extends Readable {
       type: deps.type,
       resolutions: deps.resolutions,
       namedImports: deps.namedImports,
-      exports: deps.exports
+      exports: deps.exports,
+      addons: deps.addons
     }
 
     if (this.packages && type !== 'json') {
@@ -149,7 +178,6 @@ module.exports = class DependencyStream extends Readable {
       if (p) {
         result.resolutions.push({
           isImport: false,
-          isAddon: false,
           position: null,
           input: 'bare:package',
           output: p.key
@@ -160,19 +188,44 @@ module.exports = class DependencyStream extends Readable {
     const basedir = key.slice(0, key.lastIndexOf('/') + 1)
     const all = []
 
-    for (let i = 0; i < result.resolutions.length; i++) {
-      const res = result.resolutions[i]
+    for (const res of result.resolutions) {
+      if (res.input === 'node-gyp-build') {
+        result.addons.push({
+          input: '.',
+          output: null
+        })
+      }
+    }
+
+    for (const dep of result.addons) {
+      dep.input = fromFileURL(toFileURL(basedir + dep.input))
+      if (dep.input.endsWith('/')) dep.input = dep.input.slice(0, -1)
+      all.push(this._resolvePrebuild(dep.input))
+    }
+
+    for (const res of result.resolutions) {
       if (res.input === null) continue
       all.push(res.output || this._resolveModule(res.input, basedir, res.isImport))
     }
 
     const outputs = await Promise.allSettled(all)
+    let p = 0
 
-    for (let i = 0; i < result.resolutions.length; i++) {
-      const res = result.resolutions[i]
+    for (const dep of result.addons) {
+      const { value, reason } = outputs[p++]
+
+      if (reason) {
+        if (!this.strict) continue
+        throw reason
+      }
+
+      dep.output = value
+    }
+
+    for (const res of result.resolutions) {
       if (res.input === null) continue
 
-      const { value, reason } = outputs[i]
+      const { value, reason } = outputs[p++]
 
       if (reason) {
         if (!this.strict) continue
@@ -202,4 +255,8 @@ function toFileURL (path) {
 
 function fromFileURL (url) {
   return decodeURI(url.pathname)
+}
+
+function sniffHost () {
+  return require.addon ? require.addon.host : (typeof process !== 'undefined' ? process.platform + '-' + process.arch : 'none-none')
 }
