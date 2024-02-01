@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "b4a": "^1.6.4",
-    "drive-resolve": "^1.1.0",
+    "bare-module-resolve": "^1.4.4",
     "sloppy-module-parser": "^1.0.1",
     "streamx": "^2.15.6"
   },
