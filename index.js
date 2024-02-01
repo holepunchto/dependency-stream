@@ -126,7 +126,7 @@ module.exports = class DependencyStream extends Readable {
   async _read (cb) {
     if (this._queue.length === 0) {
       this.push(null)
-      return
+      return cb(null)
     }
 
     try {
@@ -135,6 +135,7 @@ module.exports = class DependencyStream extends Readable {
         if (this.modules.has(key)) continue
         const data = await this._addOnce(key)
         this.modules.set(key, data)
+        this._pending.delete(key)
         if (this.push(data) === false) break
       }
     } catch (err) {
@@ -146,12 +147,9 @@ module.exports = class DependencyStream extends Readable {
 
   async _addOnce (key) {
     if (this._pending.has(key)) return this._pending.get(key)
-
     const p = this._add(key)
     this._pending.set(key, p)
     await p
-    this._pending.delete(key)
-
     return p
   }
 

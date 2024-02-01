@@ -9,7 +9,7 @@
   "dependencies": {
     "b4a": "^1.6.4",
     "bare-module-resolve": "^1.4.4",
-    "sloppy-module-parser": "^1.0.1",
+    "sloppy-module-parser": "holepunchto/sloppy-module-parser",
     "streamx": "^2.15.6"
   },
   "devDependencies": {
