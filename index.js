@@ -104,7 +104,9 @@ module.exports = class DependencyStream extends Readable {
       if (e) return this.portable ? key.replace('/prebuilds/' + this.host + '/', '/prebuilds/{host}/') : key
     }
 
-    throw new Error('Addon not found')
+    const err = new Error(`Cannot find addon '${key}'`)
+    err.code = 'ADDON_NOT_FOUND'
+    throw err
   }
 
   async _resolveModule (id, basedir, isImport) {
