@@ -41,9 +41,10 @@ module.exports = class DependencyStream extends Readable {
 
   async _open (cb) {
     try {
+      const entrypoint = /^[./]/.test(this.entrypoint) ? this.entrypoint : './' + this.entrypoint
       await parse.init()
       const pkg = await this._readPackageCached('/package.json')
-      const key = await this._resolveModule(this.entrypoint, '/', (!!pkg && pkg.type === 'module'))
+      const key = await this._resolveModule(entrypoint, '/', (!!pkg && pkg.type === 'module'))
       this._queue.push(key)
     } catch (err) {
       return cb(err)
