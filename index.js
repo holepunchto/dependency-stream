@@ -190,7 +190,7 @@ module.exports = class DependencyStream extends Readable {
     const all = []
 
     for (const res of result.resolutions) {
-      if (res.input === 'node-gyp-build') {
+      if (res.input === 'node-gyp-build' || res.input === 'load-addon') {
         result.addons.push({
           input: '.',
           output: null
