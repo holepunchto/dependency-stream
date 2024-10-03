@@ -87,7 +87,7 @@ module.exports = class DependencyStream extends Readable {
     const pkg = await this._readPackageCached(key + '/package.json')
     if (!pkg) throw new Error('Addon requires a package.json')
 
-    const name = pkg.name.replace(/@/g, '+')
+    const name = pkg.name.replace(/\//g, '+')
     const tries = [
       key + '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.node',
       key + '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.bare',
