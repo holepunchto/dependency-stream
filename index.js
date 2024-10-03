@@ -90,14 +90,14 @@ module.exports = class DependencyStream extends Readable {
 
     const name = pkg.name.replace(/@/g, '+')
     const tries = [
-      key + '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.bare',
       key + '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.node',
-      key + '/prebuilds/' + this.host + '/' + name + '.bare',
+      key + '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.bare',
       key + '/prebuilds/' + this.host + '/' + name + '.node',
-      '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.bare',
+      key + '/prebuilds/' + this.host + '/' + name + '.bare',
       '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.node',
-      '/prebuilds/' + this.host + '/' + name + '.bare',
-      '/prebuilds/' + this.host + '/' + name + '.node'
+      '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.bare',
+      '/prebuilds/' + this.host + '/' + name + '.node',
+      '/prebuilds/' + this.host + '/' + name + '.bare'
     ]
 
     for (const key of tries) {
