@@ -170,7 +170,8 @@ module.exports = class DependencyStream extends Readable {
       resolutions: deps.resolutions,
       namedImports: deps.namedImports,
       exports: deps.exports,
-      addons: deps.addons
+      addons: deps.addons,
+      assets: deps.assets
     }
 
     if (this.packages && type !== 'json') {
