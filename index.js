@@ -2,6 +2,7 @@ const parse = require('sloppy-module-parser')
 const b4a = require('b4a')
 const resolve = require('bare-module-resolve')
 const FIFO = require('fast-fifo')
+const runtime = require('which-runtime')
 const { Readable } = require('streamx')
 
 module.exports = class DependencyStream extends Readable {
@@ -14,8 +15,7 @@ module.exports = class DependencyStream extends Readable {
     builtins = [],
     runtimes = ['bare', 'node'],
     extensions = ['.js', '.cjs', '.json', '.mjs'],
-    host = sniffHost(),
-    portable = false,
+    host = runtime.platform + '-' + runtime.arch,
     conditions = runtimes
   } = {}) {
     super({ highWaterMark: 64 * 1024, byteLength: objectByteLength })
@@ -30,7 +30,6 @@ module.exports = class DependencyStream extends Readable {
     this.packages = packages
     this.extensions = extensions
     this.host = host
-    this.portable = portable
 
     this._importConditions = ['module', 'import', ...conditions]
     this._requireConditions = ['require', ...conditions]
@@ -102,7 +101,7 @@ module.exports = class DependencyStream extends Readable {
 
     for (const key of tries) {
       const e = await this.drive.entry(key)
-      if (e) return this.portable ? key.replace('/prebuilds/' + this.host + '/', '/prebuilds/{host}/') : key
+      if (e) return key
     }
 
     const err = new Error(`Cannot find addon '${key}'`)
@@ -256,8 +255,4 @@ function toFileURL (path) {
 
 function fromFileURL (url) {
   return decodeURI(url.pathname)
-}
-
-function sniffHost () {
-  return require.addon ? require.addon.host : (typeof process !== 'undefined' ? process.platform + '-' + process.arch : 'none-none')
 }
