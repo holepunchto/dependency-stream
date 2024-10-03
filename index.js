@@ -189,7 +189,7 @@ module.exports = class DependencyStream extends Readable {
     const all = []
 
     for (const res of result.resolutions) {
-      if (res.input === 'node-gyp-build' || res.input === 'load-addon') {
+      if (isAddonPolyfill(res.input)) {
         result.addons.push({
           input: '.',
           output: null
@@ -255,4 +255,9 @@ function toFileURL (path) {
 
 function fromFileURL (url) {
   return decodeURI(url.pathname)
+}
+
+function isAddonPolyfill (name) {
+  // node-gyp-build is our old one, and require-addon is the only we moved to
+  return name === 'node-gyp-build' || name === 'require-addon'
 }
