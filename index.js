@@ -202,7 +202,7 @@ module.exports = class DependencyStream extends Readable {
     for (const dep of result.addons) {
       dep.input = fromFileURL(toFileURL(basedir + dep.input))
       if (dep.input.endsWith('/')) dep.input = dep.input.slice(0, -1)
-      all.push(Promise.all([this._resolvePrebuild(dep.input), dep.output || this._resolveModule(dep.input, basedir, false)]))
+      all.push(Promise.all([this._resolvePrebuild(dep.input), dep.referrer ? this._resolveModule(dep.referrer, basedir, false) : null]))
     }
 
     for (const res of result.resolutions) {
