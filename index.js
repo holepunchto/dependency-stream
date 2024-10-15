@@ -193,7 +193,8 @@ module.exports = class DependencyStream extends Readable {
       if (isAddonPolyfill(res.input)) {
         result.addons.push({
           input: '.',
-          output: null
+          output: null,
+          referrer: res.input
         })
       }
     }
@@ -201,7 +202,7 @@ module.exports = class DependencyStream extends Readable {
     for (const dep of result.addons) {
       dep.input = fromFileURL(toFileURL(basedir + dep.input))
       if (dep.input.endsWith('/')) dep.input = dep.input.slice(0, -1)
-      all.push(this._resolvePrebuild(dep.input))
+      all.push(Promise.all([this._resolvePrebuild(dep.input), dep.output || this._resolveModule(dep.input, basedir, false)]))
     }
 
     for (const res of result.resolutions) {
@@ -220,7 +221,7 @@ module.exports = class DependencyStream extends Readable {
         throw reason
       }
 
-      dep.output = value
+      [dep.output, dep.referrer] = value
     }
 
     for (const res of result.resolutions) {
