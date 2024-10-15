@@ -96,7 +96,7 @@ module.exports = class DependencyStream extends Readable {
       if (await this.drive.entry(key)) return key
     }
 
-    const err = new Error(`Cannot find addon '${key}'`)
+    const err = new Error(`Cannot find addon '${id}'`)
     err.code = 'ADDON_NOT_FOUND'
     throw err
   }
