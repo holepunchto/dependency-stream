@@ -180,7 +180,7 @@ module.exports = class DependencyStream extends Readable {
         result.resolutions.push({
           isImport: deps.type === 'module',
           position: null,
-          input: 'bare:package',
+          input: '#package',
           output: p.key
         })
       }
