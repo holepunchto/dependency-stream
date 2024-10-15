@@ -1,6 +1,7 @@
 const parse = require('sloppy-module-parser')
 const b4a = require('b4a')
-const resolve = require('bare-module-resolve')
+const resolveModule = require('bare-module-resolve')
+const resolveAddon = require('bare-addon-resolve')
 const FIFO = require('fast-fifo')
 const runtime = require('which-runtime')
 const { Readable } = require('streamx')
@@ -33,6 +34,7 @@ module.exports = class DependencyStream extends Readable {
 
     this._importConditions = ['module', 'import', ...conditions]
     this._requireConditions = ['require', ...conditions]
+    this._addonConditions = ['addon', ...conditions]
     this._pending = new Map()
     this._packages = new Map()
     this._queue = new FIFO()
@@ -73,7 +75,7 @@ module.exports = class DependencyStream extends Readable {
   async _resolvePackage (key) {
     const basedir = key.slice(0, key.lastIndexOf('/') + 1)
 
-    for (const url of resolve.lookupPackageScope(toFileURL(basedir))) {
+    for (const url of resolveModule.lookupPackageScope(toFileURL(basedir))) {
       const k = fromFileURL(url)
       const pkg = await this._readPackageCached(k)
       if (!pkg) continue
@@ -83,25 +85,15 @@ module.exports = class DependencyStream extends Readable {
     return null
   }
 
-  async _resolvePrebuild (key) {
-    const pkg = await this._readPackageCached(key + '/package.json')
-    if (!pkg) throw new Error('Addon requires a package.json')
+  async _resolveAddon (id, basedir) {
+    const conditions = this._addonConditions
 
-    const name = pkg.name.replace(/\//g, '+')
-    const tries = [
-      key + '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.node',
-      key + '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.bare',
-      key + '/prebuilds/' + this.host + '/' + name + '.node',
-      key + '/prebuilds/' + this.host + '/' + name + '.bare',
-      '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.node',
-      '/prebuilds/' + this.host + '/' + name + '@' + pkg.version + '.bare',
-      '/prebuilds/' + this.host + '/' + name + '.node',
-      '/prebuilds/' + this.host + '/' + name + '.bare'
-    ]
+    const readPackage = (packageURL) => this._readPackageCached(fromFileURL(packageURL))
+    const parentURL = toFileURL(basedir)
 
-    for (const key of tries) {
-      const e = await this.drive.entry(key)
-      if (e) return key
+    for await (const addonURL of resolveAddon(id, parentURL, { host: this.host, extensions: ['.node', '.bare'], conditions }, readPackage)) {
+      const key = fromFileURL(addonURL)
+      if (await this.drive.entry(key)) return key
     }
 
     const err = new Error(`Cannot find addon '${key}'`)
@@ -115,7 +107,7 @@ module.exports = class DependencyStream extends Readable {
     const readPackage = (packageURL) => this._readPackageCached(fromFileURL(packageURL))
     const parentURL = toFileURL(basedir)
 
-    for await (const moduleURL of resolve(id, parentURL, { extensions: this.extensions, conditions }, readPackage)) {
+    for await (const moduleURL of resolveModule(id, parentURL, { extensions: this.extensions, conditions }, readPackage)) {
       const key = fromFileURL(moduleURL)
       if (await this.drive.entry(key)) return key
     }
@@ -199,9 +191,8 @@ module.exports = class DependencyStream extends Readable {
     }
 
     for (const dep of result.addons) {
-      dep.input = fromFileURL(toFileURL(basedir + dep.input))
-      if (dep.input.endsWith('/')) dep.input = dep.input.slice(0, -1)
-      all.push(this._resolvePrebuild(dep.input))
+      if (dep.input === null) continue
+      all.push(this._resolveAddon(dep.input, basedir))
     }
 
     for (const res of result.resolutions) {

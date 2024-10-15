@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "b4a": "^1.6.4",
+    "bare-addon-resolve": "^1.5.1",
     "bare-module-resolve": "^1.4.4",
     "sloppy-module-parser": "^2.0.0",
     "streamx": "^2.15.6",
