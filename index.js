@@ -182,6 +182,11 @@ module.exports = class DependencyStream extends Readable {
           position: null,
           input: 'bare:package',
           output: p.key
+        }, {
+          isImport: deps.type === 'module',
+          position: null,
+          input: '#package',
+          output: p.key
         })
       }
     }
