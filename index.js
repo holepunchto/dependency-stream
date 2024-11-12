@@ -185,13 +185,20 @@ module.exports = class DependencyStream extends Readable {
       if (isAddonPolyfill(res.input)) {
         result.addons.push({
           input: '.',
-          output: null
+          output: null,
+          referrer: res.input
         })
       }
     }
 
     for (const dep of result.addons) {
-      if (dep.input === null) continue
+      if (dep.referrer === 'node-gyp-build') {
+        dep.input = fromFileURL(toFileURL(basedir + dep.input))
+        if (dep.input.endsWith('/')) dep.input = dep.input.slice(0, -1)
+      } else if (dep.input === null) {
+        continue
+      }
+
       all.push(this._resolveAddon(dep.input, basedir))
     }
 
