@@ -126,11 +126,6 @@ module.exports = class DependencyStream extends Readable {
   }
 
   async _read (cb) {
-    if (this._queue.length === 0) {
-      this.push(null)
-      return cb(null)
-    }
-
     try {
       while (this._queue.length > 0) {
         const key = this._queue.shift()
@@ -142,6 +137,11 @@ module.exports = class DependencyStream extends Readable {
       }
     } catch (err) {
       return cb(err)
+    }
+
+    if (this._queue.length === 0) {
+      this.push(null)
+      return cb(null)
     }
 
     cb(null)
