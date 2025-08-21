@@ -16,6 +16,7 @@ const d = new DependencyStream(drive, {
   preload: true, // preload as much as possible
   source: false, // include source in results
   strict: false, // if true, fail if something cannot be resolved
+  packages: false, // include package.json files
   conditions: [], // what conditions to apply to export maps
   builtins: setOrArray // set to the builtin modules of your runtime
 })
