@@ -194,11 +194,11 @@ module.exports = class DependencyStream extends Readable {
       const obj = JSON.parse(source)
       const inputs = Object.values(obj)
       const outputs = await Promise.all(inputs.map((item) => this._resolveModule(item, basedir)))
-      outputs.forEach(item => {
-        if (!result.resolutions.some(item => item.input === item)) {
-          result.resolutions.push({ isImport: false, position: null, input: item, output: null })
+      for (const output of outputs) {
+        if (!result.resolutions.some(item => item.input === output)) {
+          result.resolutions.push({ isImport: false, position: null, input: output, output: null })
         }
-      })
+      }
     }
 
     for (const res of result.resolutions) {
