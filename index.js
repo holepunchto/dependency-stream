@@ -186,17 +186,37 @@ module.exports = class DependencyStream extends Readable {
     const basedir = key.slice(0, key.lastIndexOf('/') + 1)
     const all = []
 
-    for (const input of deps.importsAttributes) {
-      const output = await this._resolveModule(input, basedir)
-      const data = await this.drive.get(output)
+    for (const attrInput of deps.importsAttributes) {
+      const attrOutput = await this._resolveModule(attrInput, basedir)
+      const data = await this.drive.get(attrOutput)
       if (data === null) throw new Error('Key not found: ' + key)
+
       const source = b4a.toString(data)
-      const obj = JSON.parse(source)
-      const inputs = Object.values(obj)
-      const outputs = await Promise.all(inputs.map((item) => this._resolveModule(item, basedir)))
-      for (const output of outputs) {
-        if (!result.resolutions.some(item => item.input === output)) {
-          result.resolutions.push({ isImport: false, position: null, input: output, output: null })
+      let obj = {}
+      try {
+        obj = JSON.parse(source)
+      } catch (err) {
+        const jsonErr = new Error(`Invalid import attribute json file: ${key}`)
+        jsonErr.code = 'ERROR_IMPORT_ATTRIBUTE_JSON_PARSE'
+        throw jsonErr
+      }
+
+      const modules = Object.values(obj)
+      const resolvedModules = []
+      for (const item of modules) {
+        try {
+          const res = await this._resolveModule(item, basedir)
+          resolvedModules.push(res)
+        } catch (err) {
+          const resolveErr = new Error(`Failed to resolve module ${item}`)
+          resolveErr.code = 'ERROR_IMPORT_ATTRIBUTE_MODULE_RESOLVE'
+          throw resolveErr
+        }
+      }
+
+      for (const resolvedModule of resolvedModules) {
+        if (!result.resolutions.some(item => item.input === resolvedModule)) {
+          result.resolutions.push({ isImport: false, position: null, input: resolvedModule, output: null })
         }
       }
     }
