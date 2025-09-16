@@ -186,6 +186,21 @@ module.exports = class DependencyStream extends Readable {
     const basedir = key.slice(0, key.lastIndexOf('/') + 1)
     const all = []
 
+    for (const input of deps.imports) {
+      const output = await this._resolveModule(input, basedir)
+      const data = await this.drive.get(output)
+      if (data === null) throw new Error('Key not found: ' + key)
+      const source = b4a.toString(data)
+      const obj = JSON.parse(source)
+      const inputs = Object.values(obj)
+      const outputs = await Promise.all(inputs.map((item) => this._resolveModule(item, basedir)))
+      outputs.forEach(item => {
+        if (!result.resolutions.some(item => item.input === item)) {
+          result.resolutions.push({ isImport: false, position: null, input: item, output: null })
+        }
+      })
+    }
+
     for (const res of result.resolutions) {
       if (isAddonPolyfill(res.input)) {
         result.addons.push({
