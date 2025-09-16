@@ -186,7 +186,7 @@ module.exports = class DependencyStream extends Readable {
     const basedir = key.slice(0, key.lastIndexOf('/') + 1)
     const all = []
 
-    for (const input of deps.imports) {
+    for (const input of deps.importsAttributes) {
       const output = await this._resolveModule(input, basedir)
       const data = await this.drive.get(output)
       if (data === null) throw new Error('Key not found: ' + key)
