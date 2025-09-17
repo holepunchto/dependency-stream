@@ -193,16 +193,21 @@ module.exports = class DependencyStream extends Readable {
         if (data === null) throw new Error('Key not found: ' + key)
 
         const source = b4a.toString(data)
-        let obj = {}
+        let imports = {}
         try {
-          obj = JSON.parse(source)
+          const obj = JSON.parse(source)
+          if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
+            throw new Error(`Invalid import attribute json file: ${key}`)
+          }
+          if ('imports' in obj) imports = obj.imports
+          else imports = obj
         } catch (err) {
           const jsonErr = new Error(`Invalid import attribute json file: ${key}`)
-          jsonErr.code = 'ERROR_IMPORT_ATTRIBUTE_JSON_PARSE'
+          jsonErr.code = 'INVALID_JSON'
           throw jsonErr
         }
 
-        const modules = Object.values(obj)
+        const modules = Object.values(imports)
         const resolvedModules = []
         for (const item of modules) {
           try {
@@ -210,7 +215,7 @@ module.exports = class DependencyStream extends Readable {
             resolvedModules.push(res)
           } catch (err) {
             const resolveErr = new Error(`Failed to resolve module ${item}`)
-            resolveErr.code = 'ERROR_IMPORT_ATTRIBUTE_MODULE_RESOLVE'
+            resolveErr.code = 'MODULE_NOT_FOUND'
             throw resolveErr
           }
         }
