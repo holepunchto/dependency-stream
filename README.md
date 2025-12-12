@@ -8,7 +8,7 @@ npm install dependency-stream
 
 ## Usage
 
-``` js
+```js
 const DependencyStream = require('dependency-stream')
 
 const d = new DependencyStream(drive, {
