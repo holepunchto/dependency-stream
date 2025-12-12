@@ -237,8 +237,13 @@ module.exports = class DependencyStream extends Readable {
         }
 
         for (const resolvedModule of resolvedModules) {
-          if (!result.resolutions.some(item => item.input === resolvedModule)) {
-            result.resolutions.push({ isImport: false, position: null, input: resolvedModule, output: null })
+          if (!result.resolutions.some((item) => item.input === resolvedModule)) {
+            result.resolutions.push({
+              isImport: false,
+              position: null,
+              input: resolvedModule,
+              output: null
+            })
           }
         }
       }
