@@ -274,10 +274,6 @@ module.exports = class DependencyStream extends Readable {
 
     for (const res of result.resolutions) {
       if (res.input === null) continue
-      if (preresolved.has(res.input)) {
-        const output = preresolved.get(res.input)
-        if (output[0] === '/') res.output = preresolved.get(res.input)
-      }
       all.push(res.output || this._resolveModule(res.input, basedir, res.isImport, resolutions))
     }
 
