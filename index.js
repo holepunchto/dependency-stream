@@ -46,9 +46,11 @@ module.exports = class DependencyStream extends Readable {
   async _open(cb) {
     try {
       const entrypoint = /^[./]/.test(this.entrypoint) ? this.entrypoint : './' + this.entrypoint
+      const entry = entrypoint[0] === '/' ? await this.drive.entry(entrypoint) : null
       await parse.init()
       const pkg = await this._readPackageCached('/package.json')
-      const key = await this._resolveModule(entrypoint, '/', !!pkg && pkg.type === 'module')
+      const imp = entry && entry.value && entry.value.metadata && entry.value.metadata.imports
+      const key = await this._resolveModule(entrypoint, '/', !!pkg && pkg.type === 'module', imp)
       this._queue.push(key)
     } catch (err) {
       return cb(err)
@@ -90,7 +92,6 @@ module.exports = class DependencyStream extends Readable {
 
   async _resolveAddon(id, basedir, resolutions) {
     const conditions = this._addonConditions
-
     const readPackage = (packageURL) => this._readPackageCached(fromFileURL(packageURL))
     const parentURL = toFileURL(basedir)
 
@@ -111,7 +112,6 @@ module.exports = class DependencyStream extends Readable {
 
   async _resolveModule(id, basedir, isImport, resolutions) {
     const conditions = isImport ? this._importConditions : this._requireConditions
-
     const readPackage = (packageURL) => this._readPackageCached(fromFileURL(packageURL))
     const parentURL = toFileURL(basedir)
 
