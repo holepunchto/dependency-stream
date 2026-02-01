@@ -77,7 +77,13 @@ module.exports = class DependencyStream extends Readable {
     }
   }
 
-  async _resolvePackage(key) {
+  async _resolvePackage(key, resolutions) {
+    if (resolutions && resolutions['#package']) {
+      const k = resolutions['#package']
+      const pkg = await this._readPackageCached(k)
+      if (pkg) return { key: k, package: pkg }
+    }
+
     const basedir = key.slice(0, key.lastIndexOf('/') + 1)
 
     for (const url of resolveModule.lookupPackageScope(toFileURL(basedir))) {
@@ -182,7 +188,7 @@ module.exports = class DependencyStream extends Readable {
     }
 
     if (this.packages && type !== 'json') {
-      const p = await this._resolvePackage(key)
+      const p = await this._resolvePackage(key, resolutions)
       if (p) {
         result.resolutions.push(
           {
