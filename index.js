@@ -46,7 +46,9 @@ module.exports = class DependencyStream extends Readable {
   async _open(cb) {
     try {
       const entrypoint = /^[./]/.test(this.entrypoint) ? this.entrypoint : './' + this.entrypoint
-      const entry = entrypoint[0] === '/' ? await this.drive.entry(entrypoint) : null
+      const entry = (entrypoint[0] === '/' && entrypoint !== '/')
+        ? await this.drive.entry(entrypoint)
+        : null
       await parse.init()
       const pkg = await this._readPackageCached('/package.json')
       const imp = entry && entry.value && entry.value.metadata && entry.value.metadata.imports
