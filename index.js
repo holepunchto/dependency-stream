@@ -98,10 +98,11 @@ module.exports = class DependencyStream extends Readable {
     return null
   }
 
-  async _resolveAddon(id, basedir, resolutions) {
+  async _resolveAddon(id, basedir, imports) {
     const conditions = this._addonConditions
     const readPackage = (packageURL) => this._readPackageCached(fromFileURL(packageURL))
     const parentURL = toFileURL(basedir)
+    const resolutions = imports ? { [parentURL]: imports } : null
 
     for await (const addonURL of resolveAddon(
       id,
@@ -118,10 +119,11 @@ module.exports = class DependencyStream extends Readable {
     throw err
   }
 
-  async _resolveModule(id, basedir, isImport, resolutions) {
+  async _resolveModule(id, basedir, isImport, imports) {
     const conditions = isImport ? this._importConditions : this._requireConditions
     const readPackage = (packageURL) => this._readPackageCached(fromFileURL(packageURL))
     const parentURL = toFileURL(basedir)
+    const resolutions = imports ? { [parentURL]: imports } : null
 
     for await (const moduleURL of resolveModule(
       id,
