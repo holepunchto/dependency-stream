@@ -46,9 +46,12 @@ module.exports = class DependencyStream extends Readable {
   async _open(cb) {
     try {
       const entrypoint = /^[./]/.test(this.entrypoint) ? this.entrypoint : './' + this.entrypoint
+      const entry =
+        entrypoint[0] === '/' && entrypoint !== '/' ? await this.drive.entry(entrypoint) : null
       await parse.init()
       const pkg = await this._readPackageCached('/package.json')
-      const key = await this._resolveModule(entrypoint, '/', !!pkg && pkg.type === 'module')
+      const imp = entry && entry.value && entry.value.metadata && entry.value.metadata.imports
+      const key = await this._resolveModule(entrypoint, '/', !!pkg && pkg.type === 'module', imp)
       this._queue.push(key)
     } catch (err) {
       return cb(err)
@@ -75,7 +78,13 @@ module.exports = class DependencyStream extends Readable {
     }
   }
 
-  async _resolvePackage(key) {
+  async _resolvePackage(key, resolutions) {
+    if (resolutions && resolutions['#package']) {
+      const k = resolutions['#package']
+      const pkg = await this._readPackageCached(k)
+      if (pkg) return { key: k, package: pkg }
+    }
+
     const basedir = key.slice(0, key.lastIndexOf('/') + 1)
 
     for (const url of resolveModule.lookupPackageScope(toFileURL(basedir))) {
@@ -88,16 +97,16 @@ module.exports = class DependencyStream extends Readable {
     return null
   }
 
-  async _resolveAddon(id, basedir) {
+  async _resolveAddon(id, basedir, imports) {
     const conditions = this._addonConditions
-
     const readPackage = (packageURL) => this._readPackageCached(fromFileURL(packageURL))
     const parentURL = toFileURL(basedir)
+    const resolutions = imports ? { [parentURL]: imports } : null
 
     for await (const addonURL of resolveAddon(
       id,
       parentURL,
-      { host: this.host, extensions: ['.node', '.bare'], conditions },
+      { host: this.host, extensions: ['.node', '.bare'], conditions, resolutions },
       readPackage
     )) {
       const key = fromFileURL(addonURL)
@@ -109,16 +118,16 @@ module.exports = class DependencyStream extends Readable {
     throw err
   }
 
-  async _resolveModule(id, basedir, isImport) {
+  async _resolveModule(id, basedir, isImport, imports) {
     const conditions = isImport ? this._importConditions : this._requireConditions
-
     const readPackage = (packageURL) => this._readPackageCached(fromFileURL(packageURL))
     const parentURL = toFileURL(basedir)
+    const resolutions = imports ? { [parentURL]: imports } : null
 
     for await (const moduleURL of resolveModule(
       id,
       parentURL,
-      { extensions: this.extensions, conditions },
+      { extensions: this.extensions, conditions, resolutions },
       readPackage
     )) {
       const key = fromFileURL(moduleURL)
@@ -161,12 +170,14 @@ module.exports = class DependencyStream extends Readable {
   }
 
   async _add(key) {
-    const data = await this.drive.get(key)
-    if (data === null) throw new Error('Key not found: ' + key)
+    const entry = await this.drive.entry(key)
+    if (entry === null) throw new Error('Key not found: ' + key)
+    const data = await this.drive.get(entry)
 
     const source = b4a.toString(data)
     const type = key.endsWith('.json') ? 'json' : key.endsWith('.mjs') ? 'module' : 'script'
     const deps = parse.parse(source, type, type !== 'script')
+    const resolutions = entry.value && entry.value.metadata && entry.value.metadata.imports
 
     const result = {
       key,
@@ -180,7 +191,7 @@ module.exports = class DependencyStream extends Readable {
     }
 
     if (this.packages && type !== 'json') {
-      const p = await this._resolvePackage(key)
+      const p = await this._resolvePackage(key, resolutions)
       if (p) {
         result.resolutions.push(
           {
@@ -204,7 +215,7 @@ module.exports = class DependencyStream extends Readable {
 
     if (deps.importsAttributes) {
       for (const attrInput of deps.importsAttributes) {
-        const attrOutput = await this._resolveModule(attrInput, basedir)
+        const attrOutput = await this._resolveModule(attrInput, basedir, true, resolutions)
         const data = await this.drive.get(attrOutput)
         if (data === null) throw new Error('Key not found: ' + key)
 
@@ -267,12 +278,12 @@ module.exports = class DependencyStream extends Readable {
         continue
       }
 
-      all.push(this._resolveAddon(dep.input, basedir))
+      all.push(this._resolveAddon(dep.input, basedir, resolutions))
     }
 
     for (const res of result.resolutions) {
       if (res.input === null) continue
-      all.push(res.output || this._resolveModule(res.input, basedir, res.isImport))
+      all.push(res.output || this._resolveModule(res.input, basedir, res.isImport, resolutions))
     }
 
     const outputs = await Promise.allSettled(all)
