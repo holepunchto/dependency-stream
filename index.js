@@ -3,7 +3,7 @@ const b4a = require('b4a')
 const resolveModule = require('bare-module-resolve')
 const resolveAddon = require('bare-addon-resolve')
 const FIFO = require('fast-fifo')
-const runtime = require('which-runtime')
+const runtime = require('#runtime')
 const { Readable } = require('streamx')
 
 module.exports = class DependencyStream extends Readable {
@@ -18,8 +18,8 @@ module.exports = class DependencyStream extends Readable {
       builtins = [],
       runtimes = ['bare', 'node'],
       extensions = ['.js', '.cjs', '.json', '.mjs'],
-      host = runtime.platform + '-' + runtime.arch,
-      conditions = runtimes
+      host = runtime.host,
+      conditions = [...runtimes, ...runtime.host.split('-')]
     } = {}
   ) {
     super({ highWaterMark: 64 * 1024, byteLength: objectByteLength })

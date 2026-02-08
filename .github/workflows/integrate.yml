@@ -5,9 +5,9 @@ on:
   pull_request:
     branches: [main]
 jobs:
-  lint:
+  test:
     runs-on: ubuntu-latest
-    name: Lint
+    name: Test
     steps:
-      - uses: holepunchto/actions/node-base@v1
-      - run: npm run lint
+      - uses: holepunchto/actions/bare-base@v1
+      - run: npm test

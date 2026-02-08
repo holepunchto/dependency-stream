@@ -1,0 +1,29 @@
+{
+  "name": "fixtures",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "imports": {
+    "#os": {
+      "darwin": {
+        "arm64": "./imports/darwin-arm64.js"
+      },
+      "linux": {
+        "x64": "./imports/linux-x64.js"
+      },
+      "default": "./imports/fallback.js"
+    },
+    "#env": {
+      "bare": "./imports/bare.js",
+      "node": "./imports/node.js",
+      "default": "./imports/fallback.js"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
