@@ -8,8 +8,12 @@
   },
   "imports": {
     "#os": {
-      "darwin": "./imports/darwin.js",
-      "linux": "./imports/linux.js"
+      "darwin": {
+        "arm64": "./imports/darwin.js"
+      },
+      "linux": {
+        "x64": "./imports/linux.js"
+      }
     },
     "#env": {
       "bare": "./imports/bare.js",

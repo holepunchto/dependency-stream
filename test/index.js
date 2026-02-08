@@ -1,6 +1,6 @@
 const { test } = require('brittle')
 const LocalDrive = require('localdrive')
-const { isBare, isMac, isLinux } = require('which-runtime')
+const { arch, platform, runtime } = require('which-runtime')
 
 const DependencyStream = require('..')
 
@@ -21,14 +21,6 @@ test('imports work', async (t) => {
     }
   }
 
-  t.is(resolutions['#env'].output, isBare ? '/imports/bare.js' : '/imports/node.js')
-
-  let expectedOS = null
-  if (isMac) {
-    expectedOS = '/imports/darwin.js'
-  } else if (isLinux) {
-    expectedOS = '/imports/linux.js'
-  }
-
-  t.is(resolutions['#os'].output, expectedOS)
+  t.is(resolutions['#env'].output, `/imports/${runtime}.js`)
+  t.is(resolutions['#os'].output, `/imports/${platform}-${arch}.js`)
 })
