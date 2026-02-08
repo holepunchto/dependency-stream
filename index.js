@@ -3,7 +3,7 @@ const b4a = require('b4a')
 const resolveModule = require('bare-module-resolve')
 const resolveAddon = require('bare-addon-resolve')
 const FIFO = require('fast-fifo')
-const runtime = require('which-runtime')
+const runtime = require('#runtime')
 const { Readable } = require('streamx')
 
 module.exports = class DependencyStream extends Readable {
@@ -16,10 +16,9 @@ module.exports = class DependencyStream extends Readable {
       strict = false,
       packages = false,
       builtins = [],
-      runtimes = [runtime.runtime],
-      extensions = ['.js', '.cjs', '.json', '.mjs'],
-      host = runtime.platform + '-' + runtime.arch,
-      conditions = [...runtimes, runtime.platform, runtime.arch]
+      extensions = runtime.extensions.module,
+      host = runtime.host,
+      conditions = runtime.conditions
     } = {}
   ) {
     super({ highWaterMark: 64 * 1024, byteLength: objectByteLength })
@@ -106,7 +105,7 @@ module.exports = class DependencyStream extends Readable {
     for await (const addonURL of resolveAddon(
       id,
       parentURL,
-      { host: this.host, extensions: ['.node', '.bare'], conditions, resolutions },
+      { host: this.host, extensions: runtime.extensions.addon, conditions, resolutions },
       readPackage
     )) {
       const key = fromFileURL(addonURL)

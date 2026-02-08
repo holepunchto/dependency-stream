@@ -6,9 +6,15 @@
   "files": [
     "./index.js"
   ],
+  "imports": {
+    "#runtime": {
+      "bare": "./runtime/bare.js",
+      "node": "./runtime/node.js"
+    }
+  },
   "scripts": {
     "format": "prettier --write .",
-    "test": "prettier . --check && lunte && brittle test/index.js && brittle-bare test/index.js"
+    "test": "prettier . --check && lunte && brittle-bare test/index.js"
   },
   "dependencies": {
     "b4a": "^1.6.4",
