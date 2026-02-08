@@ -3,7 +3,7 @@ const b4a = require('b4a')
 const resolveModule = require('bare-module-resolve')
 const resolveAddon = require('bare-addon-resolve')
 const FIFO = require('fast-fifo')
-const runtime = require('#runtime')
+const runtime = require('./runtime')
 const { Readable } = require('streamx')
 
 module.exports = class DependencyStream extends Readable {
