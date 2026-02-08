@@ -1,6 +1,6 @@
 const { test } = require('brittle')
 const LocalDrive = require('localdrive')
-const { arch, platform, runtime } = require('which-runtime')
+const { arch, platform } = require('which-runtime')
 
 const DependencyStream = require('..')
 
@@ -21,6 +21,6 @@ test('imports work', async (t) => {
     }
   }
 
-  t.is(resolutions['#env'].output, `/imports/${runtime}.js`)
+  t.is(resolutions['#env'].output, `/imports/bare.js`, 'should always use bare')
   t.is(resolutions['#os'].output, `/imports/${platform}-${arch}.js`)
 })
