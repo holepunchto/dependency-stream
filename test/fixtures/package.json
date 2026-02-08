@@ -1,0 +1,23 @@
+{
+  "name": "fixtures",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "imports": {
+    "#os": {
+      "darwin": "./imports/darwin.js",
+      "linux": "./imports/linux.js"
+    },
+    "#env": {
+      "bare": "./imports/bare.js",
+      "default": "./imports/node.js"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

@@ -8,16 +8,14 @@
   ],
   "scripts": {
     "format": "prettier --write .",
-    "lint": "prettier --check . && lunte",
-    "test": "npm run lint"
+    "test": "prettier . --check && lunte && brittle-bare test/index.js"
   },
   "dependencies": {
     "b4a": "^1.6.4",
     "bare-addon-resolve": "^1.5.1",
     "bare-module-resolve": "^1.4.4",
     "sloppy-module-parser": "^2.0.0",
-    "streamx": "^2.15.6",
-    "which-runtime": "^1.2.1"
+    "streamx": "^2.15.6"
   },
   "repository": {
     "type": "git",
@@ -30,8 +28,11 @@
   },
   "homepage": "https://github.com/holepunchto/dependency-stream",
   "devDependencies": {
+    "brittle": "^3.19.1",
+    "localdrive": "^2.2.0",
     "lunte": "^1.4.0",
     "prettier": "^3.6.2",
-    "prettier-config-holepunch": "^2.0.0"
+    "prettier-config-holepunch": "^2.0.0",
+    "which-runtime": "^1.3.2"
   }
 }
