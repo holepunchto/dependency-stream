@@ -9,10 +9,10 @@
   "imports": {
     "#os": {
       "darwin": {
-        "arm64": "./imports/darwin.js"
+        "arm64": "./imports/darwin-arm64.js"
       },
       "linux": {
-        "x64": "./imports/linux.js"
+        "x64": "./imports/linux-x64.js"
       }
     },
     "#env": {

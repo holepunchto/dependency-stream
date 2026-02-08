@@ -127,7 +127,7 @@ module.exports = class DependencyStream extends Readable {
     for await (const moduleURL of resolveModule(
       id,
       parentURL,
-      { extensions: this.extensions, conditions, resolutions },
+      { host: this.host, extensions: this.extensions, conditions, resolutions },
       readPackage
     )) {
       const key = fromFileURL(moduleURL)
