@@ -16,10 +16,10 @@ module.exports = class DependencyStream extends Readable {
       strict = false,
       packages = false,
       builtins = [],
-      runtimes = ['bare', 'node'],
+      runtimes = [runtime.runtime],
       extensions = ['.js', '.cjs', '.json', '.mjs'],
       host = runtime.platform + '-' + runtime.arch,
-      conditions = runtimes
+      conditions = [...runtimes, runtime.platform, runtime.arch]
     } = {}
   ) {
     super({ highWaterMark: 64 * 1024, byteLength: objectByteLength })
@@ -127,7 +127,7 @@ module.exports = class DependencyStream extends Readable {
     for await (const moduleURL of resolveModule(
       id,
       parentURL,
-      { host: this.host, extensions: this.extensions, conditions, resolutions },
+      { extensions: this.extensions, conditions, resolutions },
       readPackage
     )) {
       const key = fromFileURL(moduleURL)
