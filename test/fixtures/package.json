@@ -13,11 +13,13 @@
       },
       "linux": {
         "x64": "./imports/linux-x64.js"
-      }
+      },
+      "default": "./imports/fallback.js"
     },
     "#env": {
       "bare": "./imports/bare.js",
-      "default": "./imports/node.js"
+      "node": "./imports/node.js",
+      "default": "./imports/fallback.js"
     }
   },
   "keywords": [],
