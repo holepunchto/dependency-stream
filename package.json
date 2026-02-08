@@ -6,6 +6,12 @@
   "files": [
     "./index.js"
   ],
+  "imports": {
+    "#runtime": {
+      "bare": "./runtime/bare.js",
+      "node": "./runtime/node.js"
+    }
+  },
   "scripts": {
     "format": "prettier --write .",
     "test": "prettier . --check && lunte && brittle-bare test/index.js"
