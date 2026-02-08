@@ -8,12 +8,9 @@ test('imports work', async (t) => {
   const drive = new LocalDrive('./test/fixtures')
 
   const d = new DependencyStream(drive, {
-    entrypoint: './index.js',
-    preload: true,
-    source: false,
-    strict: false,
-    packages: false,
-    conditions: []
+    entrypoint: '.',
+    packages: true,
+    source: true
   })
 
   const resolutions = {}
