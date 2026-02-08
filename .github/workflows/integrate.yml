@@ -9,5 +9,5 @@ jobs:
     runs-on: ubuntu-latest
     name: Test
     steps:
-      - uses: holepunchto/actions/node-base@v1
+      - uses: holepunchto/actions/bare-base@v1
       - run: npm test
